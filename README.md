@@ -10,6 +10,7 @@ Built for line following, maze solving, and edge or sumo-ring detection. It hand
 
 - [What the sensor does](#what-the-sensor-does)
 - [Which boards work](#which-boards-work)
+- [Power and mounting](#power-and-mounting)
 - [Installing the library](#installing-the-library)
 - [Wiring](#wiring)
 - [Your first sketch](#your-first-sketch)
@@ -48,6 +49,24 @@ That is the one rule everything else is built on: **bigger number means blacker*
 | **Mega, ESP32, STM32, etc.** | Should work, not yet tested | See the note below |
 
 **About other boards:** the library is written in plain, portable C++. There is no direct register poking and no AVR-only headers, so nothing stops it running on an ESP32 or similar. That said, it has only been built and verified for AVR so far, so treat other boards as untested rather than guaranteed. If you try one, do check that your board's `analogRead()` also returns 0–1023 — some return 0–4095, which would throw the calibration off.
+
+---
+
+## Power and mounting
+
+| | |
+|---|---|
+| Input voltage | 3.3V to 5V DC |
+| Input current | about 150 mA |
+| Weight | 3 g |
+| Working height | 3 to 10 mm above the track |
+| Mounting | 2 × M2 screw holes |
+
+150 mA is more than a lot of sensors draw, so give the ARC-8 a proper 5V supply rather than running it off a pin. An MP1584 or LM7805 regulator works well. If you are using the Blueprint 01 Robot Controller Board, its onboard LM7805 already handles this and the sensor rail gives you a 5V pin to plug into.
+
+Mount the board with the two M2 screw holes, and set the height anywhere between 3 and 10 mm. Which height works best depends on your track, so try a few and watch the readings.
+
+There is an indicator LED at each end of the board. Both light up steadily when the sensor has power.
 
 ---
 
@@ -193,6 +212,8 @@ int howMany = sensors.countOnLine(); // e.g. 2
 ```
 
 Got a white line on a dark floor instead? `sensors.setLine(WHITE);` flips the comparison. You can change it at any time, even mid-loop, and it takes effect on the very next read.
+
+> **`readDigital()` is not `digitalRead()`.** The ARC-8 can be read with `digitalRead()` on the pin, but the manual warns that anywhere between about 1.5V and 3V the output is unpredictable, so on a poor track the value flickers. This library never does that. `readDigital()` takes the full analog reading, stretches it with your calibration, then compares it to the threshold. You get a steady yes or no even where `digitalRead()` would jump around.
 
 ### 3. Where is the line?
 
@@ -349,7 +370,9 @@ Not every mistake can be detected, so here are the usual suspects:
 | **All 8 numbers are identical** and change together | You forgot `sensors.begin(pins);` in `setup()`. Without it the library reads the same pin 8 times. |
 | **Nothing at all in the Serial Monitor** | No `Serial.begin(9600);` in `setup()`, or the Serial Monitor's speed box is not set to the same number. |
 | **All numbers stuck at 0, or stuck at 1023** | Power or wiring. Check VCC and GND, and that the signal wires reach the pins you listed. |
-| **Numbers barely change** between tape and floor | The bar is too far from the ground. Aim for roughly 5–10 mm. |
+| **The indicator LEDs at the ends are off, or flickering** | Off means no power at all. Flickering means the supply is not steady: loose jumper wires, a low battery, or too little current. Solder the wires to the terminals and put a capacitor near the 5V supply. |
+| **You think one sensor has died** | Point a phone camera at the board and look at the screen. Every sensor should show a faint purple dot. Infrared is invisible to your eye but the camera picks it up, so a sensor with no dot is not getting power. |
+| **Numbers barely change** between tape and floor | The bar is at the wrong height. It works between 3 and 10 mm off the track. Move it up or down until the gap between white and black readings is widest. |
 | **Position jumps around wildly** | You have not calibrated, or the sweep missed some sensors. Run the calibration sweep again, slower and wider. |
 | **The robot steers the wrong way** | Your motors are mirrored. Swap the `+` and `−` in the two speed lines: `BASE_SPEED - correction` and `BASE_SPEED + correction`. |
 | **It follows a white line badly** | You left it on the default. Add `sensors.setLine(WHITE);` in `setup()`. |
@@ -385,7 +408,7 @@ Faster robots need lower `kp`. If you raise your base speed, expect to retune.
 - **`BLACK` and `WHITE` are global names.** Many display libraries (Adafruit GFX, most TFT and OLED libraries) define their own `BLACK` and `WHITE`. Using one of those alongside ARC8 will produce a "redefined" warning from the compiler.
 - **Calibration only narrows.** The remembered light/dark values can only get further apart, never closer. If you move the robot to a completely different surface, restart the sketch before recalibrating.
 - **The PID never resets.** The running total behind `ki` and the previous error both carry on for the whole time the sketch runs. There is no reset function.
-- **No EEPROM.** Calibration is forgotten at power-off. You calibrate each time you switch on, which is what you want anyway — the lighting changes.
+- **No EEPROM.** Calibration is forgotten at power-off, so you calibrate each time you switch on. That is worth doing anyway. Room lighting does not bother the ARC-8 much, but the track surface, the sensor height and the battery voltage all change between sessions, and those do move the readings.
 - **No memory tricks.** No `malloc`, no `new`, no `String`. Everything is fixed size, so it cannot fragment your RAM mid-race.
 - **No `delay()` anywhere inside the library.** Nothing here will ever stall your loop.
 
