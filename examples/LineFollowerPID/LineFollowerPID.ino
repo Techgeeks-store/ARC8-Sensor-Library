@@ -54,7 +54,7 @@ void setup() {
 
   sensors.begin(pins);
   sensors.setLine(BLACK);
-  sensors.setPID(0.07, 0.0, 1.5);
+  sensors.setPID(0.03, 0.0, 0.8);
 
   // Sweep the robot across the line by hand while these 3 seconds run.
   Serial.println(F("Sweep the robot across the line now!"));

@@ -248,7 +248,7 @@ The position is a weighted average of the sensors that can see the line. Because
 `getCorrection()` turns the error into one steering number using PID:
 
 ```cpp
-sensors.setPID(0.07, 0.0, 1.5);   // kp, ki, kd
+sensors.setPID(0.03, 0.0, 0.8);   // kp, ki, kd
 
 void loop() {
   sensors.read(values);
@@ -391,10 +391,10 @@ Not every mistake can be detected, so here are the usual suspects:
 
 Do this in order, and change **one number at a time**.
 
-1. **Start with `setPID(0.07, 0.0, 0.0)`** — only `kp`, the other two at zero. These are the gains the Spirit robot firmware ships with.
+1. **Start with `setPID(0.03, 0.0, 0.0)`** — only `kp`, the other two at zero.
 2. **Raise `kp`** until the robot follows the line. Too low and it drifts off corners; too high and it snakes violently from side to side.
 3. **Back `kp` off slightly**, until it follows with only a gentle wobble.
-4. **Add `kd`**, around `1.5` to start. This damps the wobble. `kd` is much larger than `kp` here because it works on the *change* in error, which is a far smaller number.
+4. **Add `kd`**, around `0.8` to start. This damps the wobble. `kd` is much larger than `kp` because it works on the *change* in error, which is a far smaller number.
 5. **Leave `ki` at 0.** You only need it if the robot consistently sits a little to one side of the line, and even then keep it tiny — something like `0.0001`.
 
 | Symptom | Try |
