@@ -94,18 +94,20 @@ Open **File → Examples → ARC8 → BasicRead**. If that sketch appears and co
 
 Connect the 8 signal outputs to your Nano's analog pins, plus power and ground:
 
-| ARC8 pin | Arduino Nano |
-|---|---|
-| Sensor 1 signal | A0 |
-| Sensor 2 signal | A1 |
-| Sensor 3 signal | A2 |
-| Sensor 4 signal | A3 |
-| Sensor 5 signal | A4 |
-| Sensor 6 signal | A5 |
-| Sensor 7 signal | A6 |
-| Sensor 8 signal | A7 |
-| VCC | 5V |
-| GND | GND |
+| ARC8 pin | Arduino Nano | Sensor number **in code** |
+|---|---|---|
+| Sensor 1 signal | A0 | `0` |
+| Sensor 2 signal | A1 | `1` |
+| Sensor 3 signal | A2 | `2` |
+| Sensor 4 signal | A3 | `3` |
+| Sensor 5 signal | A4 | `4` |
+| Sensor 6 signal | A5 | `5` |
+| Sensor 7 signal | A6 | `6` |
+| Sensor 8 signal | A7 | `7` |
+| VCC | 5V | — |
+| GND | GND | — |
+
+> Watch the numbering: your board may label the sensors **1 to 8**, but in code they are always **0 to 7**. Asking for sensor `8` gets you `ARC8: bad sensor index`.
 
 > Check the labels printed on your own ARC8 board before wiring — always trust the silkscreen over a table in a README.
 
@@ -275,7 +277,7 @@ Positive means the line has drifted right, so speed the left wheel up. Negative 
 | Function | What it does |
 |---|---|
 | `void setLine(int mode)` | `BLACK` or `WHITE`. Anything else is ignored and warns. Takes effect immediately. |
-| `void setWeights(int w[8])` | Your own weights. Also recalculates the centre point for `getError()`. |
+| `void setWeights(int w[8])` | Your own weights. Also recalculates the centre point for `getError()`. **Keep each weight between −32 and +32** — see below. |
 | `int readLine()` | Where the line is. Roughly −4000 to +4000 with default weights. |
 | `int getError()` | How far off centre, which is what you steer on. |
 | `bool lineFound()` | `true` if at least one sensor can see the line. |
@@ -365,6 +367,7 @@ Faster robots need lower `kp`. If you raise your base speed, expect to retune.
 ## Things to know
 
 - **Always exactly 8 sensors.** There is no sensor-count setting and no support for other array sizes.
+- **Keep custom weights between −32 and +32.** The position is worked out as `weight × reading`, readings reach 1000, and the answer is stored in an `int` — which on an Uno or Nano tops out at 32767. A weight of 33 or more can tip it over and make the number flip sign, sending the robot the wrong way. The defaults (−4 to +4) and the CustomWeights example (−7 to +7) are well inside the limit. There is nothing wrong with small weights: what matters is the *ratio* between them, not their size.
 - **`BLACK` and `WHITE` are global names.** Many display libraries (Adafruit GFX, most TFT and OLED libraries) define their own `BLACK` and `WHITE`. Using one of those alongside ARC8 will produce a "redefined" warning from the compiler.
 - **Calibration only narrows.** The remembered light/dark values can only get further apart, never closer. If you move the robot to a completely different surface, restart the sketch before recalibrating.
 - **The PID never resets.** The running total behind `ki` and the previous error both carry on for the whole time the sketch runs. There is no reset function.

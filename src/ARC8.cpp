@@ -217,6 +217,9 @@ void ARC8::setLine(int mode) {
   _lineIsBlack = (mode == BLACK);
 }
 
+// Keep your weights inside about -32 to +32. The line position is worked out
+// as weight x reading, readings go up to 1000, and the answer is stored in an
+// int - so a weight of 33 or more can tip it over and flip the sign.
 void ARC8::setWeights(int w[8]) {
   int smallest = w[0];
   int biggest  = w[0];
@@ -245,7 +248,11 @@ void ARC8::setWeights(int w[8]) {
 void ARC8::_updateLine() {
   if (countOnLine() == 0) return;  // nothing to see, keep the last position
 
-  long sum   = 0;  // long, not int: bigger custom weights would overflow int
+  // sum is a long because the running total of weight x reading can easily
+  // pass what an int holds. The finished answer still goes into
+  // _lastLineValue, which is an int, so keep custom weights inside about
+  // -32 to +32: 32 x 1000 is 32000, which just fits.
+  long sum   = 0;
   int  count = 0;
 
   for (int i = 0; i < 8; i++) {
