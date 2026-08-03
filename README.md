@@ -340,6 +340,20 @@ If something is wrong, the library says so in the Serial Monitor in plain Englis
 | `ARC8: threshold out of range` | `setThreshold()` got a value outside 0–1000. | The scale is 0–1000, not 0–1023. Try 500. |
 | `ARC8: invalid line mode` | `setLine()` got something other than `BLACK` or `WHITE`. | Use the words `BLACK` or `WHITE`. |
 
+### Something is wrong but there is no message
+
+Not every mistake can be detected, so here are the usual suspects:
+
+| What you see | Almost certainly |
+|---|---|
+| **All 8 numbers are identical** and change together | You forgot `sensors.begin(pins);` in `setup()`. Without it the library reads the same pin 8 times. |
+| **Nothing at all in the Serial Monitor** | No `Serial.begin(9600);` in `setup()`, or the Serial Monitor's speed box is not set to the same number. |
+| **All numbers stuck at 0, or stuck at 1023** | Power or wiring. Check VCC and GND, and that the signal wires reach the pins you listed. |
+| **Numbers barely change** between tape and floor | The bar is too far from the ground. Aim for roughly 5–10 mm. |
+| **Position jumps around wildly** | You have not calibrated, or the sweep missed some sensors. Run the calibration sweep again, slower and wider. |
+| **The robot steers the wrong way** | Your motors are mirrored. Swap the `+` and `−` in the two speed lines: `BASE_SPEED - correction` and `BASE_SPEED + correction`. |
+| **It follows a white line badly** | You left it on the default. Add `sensors.setLine(WHITE);` in `setup()`. |
+
 ---
 
 ## Tuning the PID
