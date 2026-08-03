@@ -223,19 +223,21 @@ Got a white line on a dark floor instead? `sensors.setLine(WHITE);` flips the co
 
 ```
 sensor:   0    1    2    3    4    5    6    7
-weight:   4    3    2    1   -1   -2   -3   -4
+weight:  -8   -4   -2   -1    1    2    4    8
          <------- right    left -------->
 ```
 
-**Sensor 0 is the one on the right and sensor 7 is on the left.** That is how the array is numbered, so the right-hand sensors carry the positive numbers and a positive position means the line went right.
+**Sensor 0 is the one on the right and sensor 7 is on the left.** The right-hand sensors carry the negative numbers, so a **negative** position means the line went right.
+
+The numbers double as they go outwards rather than climbing evenly. The outer sensors are worth reacting hardest to, because once the line reaches them it is about to leave the array. These are the same weights the Spirit robot firmware uses, so gains carry across.
 
 The position is a weighted average of the sensors that can see the line. Because a sensor half-over the tape reads lower than one sitting right on it, sensors that barely touch the line only tug the answer a little. That is what makes the number slide smoothly as you drift, instead of jumping from sensor to sensor.
 
 | `readLine()` returns | Meaning |
 |---|---|
-| about `-4000` | line is hard over to the **left** (sensor 7 end) |
+| about `-8000` | line is hard over to the **right** (sensor 0 end) |
 | `0` | line is **dead centre** |
-| about `+4000` | line is hard over to the **right** (sensor 0 end) |
+| about `+8000` | line is hard over to the **left** (sensor 7 end) |
 
 `getError()` is the same thing measured from the centre point. With the default weights the centre is 0, so `getError()` and `readLine()` give the same answer — but if you set your own weights, `getError()` is the one that stays honest.
 
@@ -246,19 +248,19 @@ The position is a weighted average of the sensors that can see the line. Because
 `getCorrection()` turns the error into one steering number using PID:
 
 ```cpp
-sensors.setPID(0.03, 0.0, 0.02);   // kp, ki, kd
+sensors.setPID(0.07, 0.0, 1.5);   // kp, ki, kd
 
 void loop() {
   sensors.read(values);
   int correction = sensors.getCorrection();
 
-  int leftSpeed  = BASE_SPEED + correction;
-  int rightSpeed = BASE_SPEED - correction;
+  int leftSpeed  = BASE_SPEED - correction;
+  int rightSpeed = BASE_SPEED + correction;
   // send those to your motors
 }
 ```
 
-Positive means the line has drifted right, so speed the left wheel up. Negative means the opposite.
+Negative means the line has drifted right, so the left wheel gets less and the right wheel more. That is why the correction is subtracted from the left. Positive means the opposite.
 
 ---
 
@@ -303,7 +305,7 @@ Positive means the line has drifted right, so speed the left wheel up. Negative 
 |---|---|
 | `void setLine(int mode)` | `BLACK` or `WHITE`. Anything else is ignored and warns. Takes effect immediately. |
 | `void setWeights(int w[8])` | Your own weights. Also recalculates the centre point for `getError()`. **Keep each weight between −32 and +32** — see below. |
-| `int readLine()` | Where the line is. Roughly −4000 to +4000 with default weights. Positive means the line went right. |
+| `int readLine()` | Where the line is. Roughly −8000 to +8000 with default weights. Negative means the line went right. |
 | `int getError()` | How far off centre, which is what you steer on. |
 | `bool lineFound()` | `true` if at least one sensor can see the line. |
 
@@ -312,7 +314,7 @@ Positive means the line has drifted right, so speed the left wheel up. Negative 
 | Function | What it does |
 |---|---|
 | `void setPID(float kp, float ki, float kd)` | Sets the three steering numbers. |
-| `int getCorrection()` | The steering number. Positive = line drifted right. |
+| `int getCorrection()` | The steering number. Negative = line drifted right. |
 
 ### Printing (for debugging)
 
@@ -380,7 +382,7 @@ Not every mistake can be detected, so here are the usual suspects:
 | **You think one sensor has died** | Point a phone camera at the board and look at the screen. Every sensor should show a faint purple dot. Infrared is invisible to your eye but the camera picks it up, so a sensor with no dot is not getting power. |
 | **Numbers barely change** between tape and floor | The bar is at the wrong height. It works between 3 and 10 mm off the track. Move it up or down until the gap between white and black readings is widest. |
 | **Position jumps around wildly** | You have not calibrated, or the sweep missed some sensors. Run the calibration sweep again, slower and wider. |
-| **The robot steers the wrong way** | Your motors are mirrored. Swap the `+` and `−` in the two speed lines: `BASE_SPEED - correction` and `BASE_SPEED + correction`. |
+| **The robot steers the wrong way** | Your motors are mirrored. Swap the `+` and `−` in the two speed lines. |
 | **It follows a white line badly** | You left it on the default. Add `sensors.setLine(WHITE);` in `setup()`. |
 
 ---
@@ -389,10 +391,10 @@ Not every mistake can be detected, so here are the usual suspects:
 
 Do this in order, and change **one number at a time**.
 
-1. **Start with `setPID(0.03, 0.0, 0.0)`** — only `kp`, the other two at zero.
+1. **Start with `setPID(0.07, 0.0, 0.0)`** — only `kp`, the other two at zero. These are the gains the Spirit robot firmware ships with.
 2. **Raise `kp`** until the robot follows the line. Too low and it drifts off corners; too high and it snakes violently from side to side.
 3. **Back `kp` off slightly**, until it follows with only a gentle wobble.
-4. **Add a little `kd`**, maybe `0.01` to `0.05`. This damps the wobble. Raise it until the robot runs smooth.
+4. **Add `kd`**, around `1.5` to start. This damps the wobble. `kd` is much larger than `kp` here because it works on the *change* in error, which is a far smaller number.
 5. **Leave `ki` at 0.** You only need it if the robot consistently sits a little to one side of the line, and even then keep it tiny — something like `0.0001`.
 
 | Symptom | Try |

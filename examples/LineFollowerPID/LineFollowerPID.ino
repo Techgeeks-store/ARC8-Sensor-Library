@@ -5,11 +5,13 @@
 
   The library works out how far off the line the robot is, and
   getCorrection() turns that into one steering number. A positive number
-  means the line has drifted to the right, so speed the left wheel up and
-  slow the right wheel down. A negative number means the opposite.
+  means the line has drifted to the LEFT. Sensor 0 is on the right of the
+  array and sensor 7 on the left, and the right-hand sensors carry the
+  negative weights, so the line going right makes the number go negative.
 
-  Sensor 0 is on the RIGHT of the array and sensor 7 on the LEFT, which is
-  what makes a positive number mean the line went right.
+  That is why the steering line below SUBTRACTS the correction from the
+  left wheel. It is the same way round as the Spirit robot firmware, so
+  gains and code copy straight across between them.
 
   How to tune it:
     1. Start with kp small and ki and kd both 0.
@@ -52,7 +54,7 @@ void setup() {
 
   sensors.begin(pins);
   sensors.setLine(BLACK);
-  sensors.setPID(0.03, 0.0, 0.02);
+  sensors.setPID(0.07, 0.0, 1.5);
 
   // Sweep the robot across the line by hand while these 3 seconds run.
   Serial.println(F("Sweep the robot across the line now!"));
@@ -74,7 +76,7 @@ void loop() {
   // was already turning and usually finds the line again.
   int correction = sensors.getCorrection();
 
-  drive(BASE_SPEED + correction, BASE_SPEED - correction);
+  drive(BASE_SPEED - correction, BASE_SPEED + correction);
 }
 
 // Sends a speed to each motor. Both wheels always go forwards here, so any
