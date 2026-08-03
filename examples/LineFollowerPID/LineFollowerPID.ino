@@ -8,6 +8,9 @@
   means the line has drifted to the right, so speed the left wheel up and
   slow the right wheel down. A negative number means the opposite.
 
+  Sensor 0 is on the RIGHT of the array and sensor 7 on the LEFT, which is
+  what makes a positive number mean the line went right.
+
   How to tune it:
     1. Start with kp small and ki and kd both 0.
     2. Make kp bigger until the robot follows the line but wobbles.

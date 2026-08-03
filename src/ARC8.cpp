@@ -15,16 +15,23 @@ ARC8::ARC8() {
     _calMax[i] = 0;
   }
 
+  // How much each sensor counts towards the line position.
+  //
+  // Sensor 0 is the one on the RIGHT of the array and sensor 7 is on the
+  // LEFT, so the right-hand half counts positive and the left-hand half
+  // counts negative. That is what makes a positive line position mean
+  // "the line went right", which is what you steer on.
+  //
   // The two sensors closest to the middle count the least, the two on the
   // ends count the most. These add up to a dead-centre position of 0.
-  _weights[0] = -4;
-  _weights[1] = -3;
-  _weights[2] = -2;
-  _weights[3] = -1;
-  _weights[4] =  1;
-  _weights[5] =  2;
-  _weights[6] =  3;
-  _weights[7] =  4;
+  _weights[0] =  4;
+  _weights[1] =  3;
+  _weights[2] =  2;
+  _weights[3] =  1;
+  _weights[4] = -1;
+  _weights[5] = -2;
+  _weights[6] = -3;
+  _weights[7] = -4;
 
   _hasRead       = false;
   _calibrated    = false;

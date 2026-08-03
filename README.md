@@ -127,6 +127,8 @@ Connect the 8 signal outputs to your Nano's analog pins, plus power and ground:
 | GND | GND | — |
 
 > Watch the numbering: your board may label the sensors **1 to 8**, but in code they are always **0 to 7**. Asking for sensor `8` gets you `ARC8: bad sensor index`.
+>
+> **The numbering starts from the right.** Sensor `0` is the right-hand end of the array and sensor `7` is the left-hand end. Wire them to A0–A7 in that order and the default weights line up correctly.
 
 > Check the labels printed on your own ARC8 board before wiring — always trust the silkscreen over a table in a README.
 
@@ -221,17 +223,19 @@ Got a white line on a dark floor instead? `sensors.setLine(WHITE);` flips the co
 
 ```
 sensor:   0    1    2    3    4    5    6    7
-weight:  -4   -3   -2   -1    1    2    3    4
-         <-------- left    right -------->
+weight:   4    3    2    1   -1   -2   -3   -4
+         <------- right    left -------->
 ```
+
+**Sensor 0 is the one on the right and sensor 7 is on the left.** That is how the array is numbered, so the right-hand sensors carry the positive numbers and a positive position means the line went right.
 
 The position is a weighted average of the sensors that can see the line. Because a sensor half-over the tape reads lower than one sitting right on it, sensors that barely touch the line only tug the answer a little. That is what makes the number slide smoothly as you drift, instead of jumping from sensor to sensor.
 
 | `readLine()` returns | Meaning |
 |---|---|
-| about `-4000` | line is hard over to the **left** |
+| about `-4000` | line is hard over to the **left** (sensor 7 end) |
 | `0` | line is **dead centre** |
-| about `+4000` | line is hard over to the **right** |
+| about `+4000` | line is hard over to the **right** (sensor 0 end) |
 
 `getError()` is the same thing measured from the centre point. With the default weights the centre is 0, so `getError()` and `readLine()` give the same answer — but if you set your own weights, `getError()` is the one that stays honest.
 
@@ -299,7 +303,7 @@ Positive means the line has drifted right, so speed the left wheel up. Negative 
 |---|---|
 | `void setLine(int mode)` | `BLACK` or `WHITE`. Anything else is ignored and warns. Takes effect immediately. |
 | `void setWeights(int w[8])` | Your own weights. Also recalculates the centre point for `getError()`. **Keep each weight between −32 and +32** — see below. |
-| `int readLine()` | Where the line is. Roughly −4000 to +4000 with default weights. |
+| `int readLine()` | Where the line is. Roughly −4000 to +4000 with default weights. Positive means the line went right. |
 | `int getError()` | How far off centre, which is what you steer on. |
 | `bool lineFound()` | `true` if at least one sensor can see the line. |
 
@@ -318,6 +322,8 @@ Positive means the line has drifted right, so speed the left wheel up. Negative 
 | `void printCalibrated()` | Prints the 8 stretched 0–1000 readings. |
 | `void printLine()` | Prints `line: <position> error: <error>`. |
 
+> Because sensor `0` is the right-hand end, `printRaw()` and `printCalibrated()` print the array **right to left**. Slide tape under the right-hand end and the first number on screen is the one that moves.
+>
 > The print functions and every warning use `Serial`, but the library **never** calls `Serial.begin()` for you. Do that yourself in `setup()`, or you will see nothing at all.
 >
 > `printLine()` shows the last position that was worked out — it does not recalculate. Call `readLine()` or `getError()` first if you want it fresh.

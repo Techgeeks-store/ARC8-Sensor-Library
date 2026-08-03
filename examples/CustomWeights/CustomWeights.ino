@@ -1,12 +1,14 @@
 /*
   CustomWeights - ARC8
 
-  Every sensor has a weight: a number saying where it sits on the bar. The
-  left-hand sensors get negative numbers, the right-hand ones get positive
-  numbers, and readLine() mixes them together to say where the line is.
+  Every sensor has a weight: a number saying where it sits on the array.
+  readLine() mixes them together to say where the line is.
 
-  The weights the library starts with are {-4,-3,-2,-1,1,2,3,4}, which are
-  evenly spread. Here we use {-7,-5,-3,-1,1,3,5,7} instead. The gaps at the
+  Sensor 0 is the one on the RIGHT and sensor 7 is on the LEFT, so the
+  right-hand sensors get positive numbers and the left-hand ones negative.
+
+  The weights the library starts with are {4,3,2,1,-1,-2,-3,-4}, which are
+  evenly spread. Here we use {7,5,3,1,-1,-3,-5,-7} instead. The gaps at the
   ends are bigger, so when the line reaches an outer sensor the position
   number shoots up further and the robot reacts harder before it loses the
   line completely.
@@ -25,7 +27,7 @@ ARC8 sensors;
 int pins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
 int values[8];
 
-int myWeights[8] = {-7, -5, -3, -1, 1, 3, 5, 7};
+int myWeights[8] = {7, 5, 3, 1, -1, -3, -5, -7};
 
 void setup() {
   Serial.begin(9600);
